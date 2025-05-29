@@ -6,7 +6,7 @@ import tkinter as tk
 class DrawingNode(Node):
     def __init__(self):
         super().__init__('drawing_node')
-        self.publisher_ = self.create_publisher(Float32MultiArray, 'drawing_path', 10)
+        self.publisher_ = self.create_publisher(Float32MultiArray, '/drawing_path', 10)
         self.path = []
         self.is_drawing = False
 

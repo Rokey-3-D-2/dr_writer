@@ -1,0 +1,4 @@
+ROBOT_ID = 'dsr01'
+ROBOT_MODEL = 'mo6o9'
+ROBOT_TOOL = 'Tool Weight_2FG'
+ROBOT_TCP = '2FG_TCP'

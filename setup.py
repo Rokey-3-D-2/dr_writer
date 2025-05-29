@@ -20,7 +20,9 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'drawing = dr_writer.drawing:main'
+            'drawing = dr_writer.drawing:main',
+            'test_movel = dr_writer.test:main',
+            'test_topic = dr_writer.test2:main',
         ],
     },
 )
