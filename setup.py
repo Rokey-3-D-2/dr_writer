@@ -17,11 +17,11 @@ setup(
     maintainer_email='llaayy.kr@gmail.com',
     description='TODO: Package description',
     license='TODO: License declaration',
-    tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'drawing = dr_writer.drawing:main'
-            'block_move = dr_writer.block_move:main'
+            'drawing = dr_writer.drawing:main',
+            'block_move = dr_writer.block_move:main',
+            'block_move_wsh = dr_writer.block_move_wsh:main'
         ],
     },
 )
