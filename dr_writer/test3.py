@@ -59,7 +59,7 @@ def sample_points(points, max_middle=20):
 
 def main(args=None):
     rclpy.init(args=args)
-    node = rclpy.create_node("movel_test", namespace=ROBOT_ID)
+    node = rclpy.create_node("movesx_test", namespace=ROBOT_ID)
     DR_init.__dsr__node = node
 
     from DR_common2 import posx, posj

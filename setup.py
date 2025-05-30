@@ -24,6 +24,7 @@ setup(
             'test_movel = dr_writer.test:main',
             'test_topic = dr_writer.test2:main',
             'test_spline = dr_writer.test3:main',
+            'test_white_board = dr_writer.test4:main',
         ],
     },
 )
