@@ -63,7 +63,10 @@ def main(args=None):
     DR_init.__dsr__node = node
 
     from DR_common2 import posx, posj
-    from DSR_ROBOT2 import movej, set_tcp, set_tool, movesx
+    from DSR_ROBOT2 import (
+        movej, set_tcp, set_tool, movesx, 
+        get_current_posx
+    )
 
     set_tool(ROBOT_TOOL)
     set_tcp(ROBOT_TCP)
@@ -79,6 +82,9 @@ def main(args=None):
         10
     )
 
+    current_posx_z = get_current_posx()[0][2]
+    print(current_posx_z)
+
     try:
         while rclpy.ok():
             rclpy.spin_once(node, timeout_sec=0.1)  # ROS2 콜백 처리(비동기, 빠른 주기)
@@ -86,7 +92,7 @@ def main(args=None):
                 points = move_queue.get()
 
                 sampled_points = sample_points(points, max_middle=20)
-                traj = [posx([pt[0], pt[1], 300, 0, 180, 0]) for pt in sampled_points]
+                traj = [posx([pt[0], pt[1], current_posx_z, 0, 180, 0]) for pt in sampled_points]
 
                 # posx 리스트로 변환 (z/w/p/r 고정)
                 # traj = []
