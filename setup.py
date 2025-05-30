@@ -23,6 +23,7 @@ setup(
             'drawing = dr_writer.drawing:main',
             'test_movel = dr_writer.test:main',
             'test_topic = dr_writer.test2:main',
+            'test_spline = dr_writer.test3:main',
         ],
     },
 )
