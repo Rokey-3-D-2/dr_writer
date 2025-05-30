@@ -118,12 +118,14 @@ def main(args=None):
     def pen_down():
         task_compliance_ctrl()
         time.sleep(0.1)
-        set_desired_force(fd=[0, 0, 10, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+        set_desired_force(fd=[0, 0, 20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
 
     def pen_up():
         release_compliance_ctrl()
         release_force()
-        movel(white_board_home, VEL, ACC)
+
+        traj[-1][2] -= 10
+        movel(traj[-1], VEL, ACC)
 
     try:
         movel(white_board_home, VEL, ACC)
@@ -137,12 +139,13 @@ def main(args=None):
                 node.get_logger().info(f"Splined path 실행: {traj}, {len(traj)}")
                 
                 movel(traj[0], VEL, ACC)
+                node.get_logger().info('move to start point')
 
                 pen_down()
                 node.get_logger().info('pen_down')
 
-                while check_force_condition(DR_AXIS_Z, min=5, max=15): pass
-                set_desired_force(fd=[0, 0, 1, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                while check_force_condition(DR_AXIS_Z, min=5, max=21): pass
+                set_desired_force(fd=[0, 0, 0.1, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
                 node.get_logger().info('touch on board!')
 
                 # 스플라인 명령으로 경로 전체를 연속 실행
@@ -158,6 +161,8 @@ def main(args=None):
 
                 pen_up()
                 node.get_logger().info('pen_up')
+        
+                movel(white_board_home, VEL, ACC)
     except KeyboardInterrupt:
         release_compliance_ctrl()
         release_force()
