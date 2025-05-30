@@ -21,6 +21,7 @@ setup(
     entry_points={
         'console_scripts': [
             'drawing = dr_writer.drawing:main'
+            'block_move = dr_writer.block_move:main'
         ],
     },
 )
