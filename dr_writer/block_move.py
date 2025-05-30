@@ -1,0 +1,88 @@
+# pick and place in 1 method. from pos1 to pos2 @20241104
+
+import rclpy
+import DR_init
+import time
+
+# for single robot
+ROBOT_ID = "dsr01"
+ROBOT_MODEL = "m0609"
+VELOCITY, ACC = 60, 60
+
+DR_init.__dsr__id = ROBOT_ID
+DR_init.__dsr__model = ROBOT_MODEL
+
+OFF, ON = 0, 1
+
+
+
+
+def main(args=None):
+    rclpy.init(args=args)
+    node = rclpy.create_node("force_control", namespace=ROBOT_ID)
+
+    DR_init.__dsr__node = node
+
+    try:
+        from DSR_ROBOT2 import (
+            release_compliance_ctrl,
+            check_force_condition,
+            task_compliance_ctrl,
+            set_desired_force,
+            set_tool,
+            set_tcp,
+            movej,
+            movel,
+            DR_FC_MOD_REL,
+            DR_AXIS_Z,
+            DR_BASE,
+            release_force,
+        )
+        from DR_common2 import posx
+
+    except ImportError as e:
+        print(f"Error importing DSR_ROBOT2 : {e}")
+        return
+
+    pos = posx([496.06, 93.46, 96.92, 20.75, 179.00, 19.09])
+    pos_org_1 = posx([499.0, 145.0, 130.0, 0.0, 180.00, 0.0])
+    
+    posx(499.0, 145.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(552.0, 145.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(600.0, 145.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(499.0, 95.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(550.0, 95.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(600.0, 95.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(499.0, 45.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(550.0, 45.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(600.0, 45.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(499.0, 56.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(550.0, 56.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+    posx(600.0, 56.0, 130.0, 0.0, 0.0, 180.0, 0.0)
+
+    
+    
+    # 초기 위치
+    JReady = [0, 0, 90, 0, 90, 0]
+    set_tool("TCP208mm")
+    set_tcp("Tool Weight_3_24")
+
+    while rclpy.ok():
+        # 초기 위치로 이동
+        movej(JReady, vel=VELOCITY, acc=ACC)
+        movel(pos, vel=VELOCITY, acc=ACC, ref=DR_BASE)
+        print("force_control_start")
+        task_compliance_ctrl(stx=[100, 100, 100, 100, 100, 100])
+        set_desired_force(fd=[0, 0, -10, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+        time.sleep(0.1)
+        while not check_force_condition(DR_AXIS_Z, max=5):
+            pass
+        release_force()
+        time.sleep(0.1)
+        release_compliance_ctrl()
+
+    rclpy.shutdown()
+
+
+if __name__ == "__main__":
+    main()
