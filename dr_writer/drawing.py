@@ -40,11 +40,11 @@ class DrawingNode(Node):
         if not self.path:
             print("No drawing to send!")
             return
-
+        
         # 2D path를 1D 배열로 평탄화해서 전송: [x0, y0, x1, y1, ...]
         data = []
         for pt in self.path:
-            data.extend([float(pt[0]), float(pt[1])])
+            data.extend([float(pt[0] / 2), float(pt[1] / 2)])
 
         msg = Float32MultiArray()
         msg.data = data
@@ -67,3 +67,7 @@ def main(args=None):
 
 if __name__ == '__main__':
     main()
+
+"""
+ros2 topic pub --once /drawing_path std_msgs/msg/Float32MultiArray "{data: [0.0, 0.0, 200.0, 0.0, 200.0, 200.0, 0.0, 200.0, 0.0, 0.0]}"
+"""
