@@ -118,7 +118,7 @@ def main(args=None):
     def pen_up():
         release()
 
-        traj[-1][2] -= 10
+        traj[-1][2] -= 5
         movel(traj[-1], VEL, ACC)
 
     def draw_on_board(traj):
@@ -132,9 +132,9 @@ def main(args=None):
             if not move_queue.empty():
                 points = move_queue.get()
 
-                # sampled_points = sample_points(points, max_middle=20)
-                # traj = convert_to_posx(sampled_points)
-                traj = convert_to_posx(points)
+                sampled_points = sample_points(points, max_middle=20)
+                traj = convert_to_posx(sampled_points)
+                # traj = convert_to_posx(points) # for cli pub
                 node.get_logger().info(f"Splined path 실행: {traj}, {len(traj)}")
                 
                 movel(traj[0], VEL, ACC)
@@ -144,10 +144,8 @@ def main(args=None):
                 node.get_logger().info('pen_down')
 
                 while check_force_condition(DR_AXIS_Z, min=5, max=21): pass
-                node.get_logger().info(f'before force = {get_joint_torque()}')
                 release_force()
                 set_desired_force(fd=[0, 0, 5, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
-                node.get_logger().info(f'after force = {get_joint_torque()}')
                 node.get_logger().info('touch on board!')
 
                 # 스플라인 명령으로 경로 전체를 연속 실행

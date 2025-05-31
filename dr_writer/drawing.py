@@ -19,8 +19,14 @@ class DrawingNode(Node):
         self.canvas.bind("<B1-Motion>", self.draw)
         self.canvas.bind("<ButtonRelease-1>", self.end_draw)
 
-        self.finish_button = tk.Button(self.root, text="Send Path", command=self.publish_path)
-        self.finish_button.pack()
+        self.button_frame = tk.Frame(self.root)
+        self.button_frame.pack()
+
+        self.finish_button = tk.Button(self.button_frame, text="Send Path", command=self.publish_path)
+        self.finish_button.pack(side=tk.LEFT, padx=10)
+
+        self.clear_button = tk.Button(self.button_frame, text="Clear", command=self.clear_canvas)
+        self.clear_button.pack(side=tk.LEFT, padx=10)
 
     def start_draw(self, event):
         self.is_drawing = True
@@ -35,6 +41,11 @@ class DrawingNode(Node):
         if self.is_drawing:
             self.path.append((event.x, event.y))
             self.is_drawing = False
+
+    def clear_canvas(self):
+        self.canvas.delete("all")  # 화면 지우기
+        self.path = []             # 경로도 초기화
+        print("Canvas cleared.")
 
     def publish_path(self):
         if not self.path:
