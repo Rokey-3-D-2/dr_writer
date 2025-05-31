@@ -64,7 +64,13 @@ def main(args=None):
         DR_FC_MOD_REL
     )
 
-    print(f'tcp: {get_tcp()}, tool: {get_tool()}')
+
+    tcp, tool = get_tcp(), get_tool()
+    print(f'tcp: {tcp}, tool: {tool}')
+    if tcp != ROBOT_TCP or tool != ROBOT_TOOL:
+        node.destroy_node()
+        rclpy.shutdown()
+        return
 
     set_tool(ROBOT_TOOL)
     set_tcp(ROBOT_TCP)
