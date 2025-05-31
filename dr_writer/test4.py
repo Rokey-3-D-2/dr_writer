@@ -37,11 +37,12 @@ def main(args=None):
 
     from DR_common2 import posx, posj
     from DSR_ROBOT2 import (
+        get_tcp, get_tool,
         set_tcp, set_tool, 
         set_ref_coord,
         
         movej, movel, movesx, amovesx,
-        check_motion,
+        check_motion, mwait,
         
         check_force_condition,
         task_compliance_ctrl,
@@ -50,6 +51,8 @@ def main(args=None):
         release_force,
 
         get_current_posx,
+        get_tool_force,
+        get_joint_torque,
         
         set_user_cart_coord,
         get_user_cart_coord,
@@ -59,6 +62,8 @@ def main(args=None):
 
         DR_FC_MOD_REL
     )
+
+    print(f'tcp: {get_tcp()}, tool: {get_tool()}')
 
     set_tool(ROBOT_TOOL)
     set_tcp(ROBOT_TCP)
@@ -70,18 +75,6 @@ def main(args=None):
         listener_callback,
         10
     )
-
-    # result = get_user_cart_coord(DR_WHITE_BOARD)
-    # print(result)
-
-    # pos1 = posx([100, 0, 0, 0, 0, 0])
-    # pos2 = posx([0, 100, 0, 0, 0, 0])
-    # pos3 = posx([0, 0, 100, 0, 0, 0])
-
-    # if rclpy.ok():
-    #     movel(pos1, VEL, ACC, ref=DR_WHITE_BOARD)
-    #     movel(pos2, VEL, ACC, ref=DR_WHITE_BOARD)
-    #     movel(pos3, VEL, ACC, ref=DR_WHITE_BOARD)
 
     white_board_home = posx([0, 0, 0, 0, 0, 0])
 
@@ -112,20 +105,25 @@ def main(args=None):
     def convert_to_posx(sampled_points):
         return [posx([pt[0], pt[1], 0, 0, 0, 0]) for pt in sampled_points]
 
-    def draw_on_board(traj):
-        amovesx(traj, vel=VEL, acc=ACC)
+    def release():
+        release_compliance_ctrl()
+        release_force()
 
     def pen_down():
         task_compliance_ctrl()
         time.sleep(0.1)
         set_desired_force(fd=[0, 0, 20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+        time.sleep(0.1)
 
     def pen_up():
-        release_compliance_ctrl()
-        release_force()
+        release()
 
         traj[-1][2] -= 10
         movel(traj[-1], VEL, ACC)
+
+    def draw_on_board(traj):
+        ret = amovesx(traj, vel=VEL, acc=ACC)
+        node.get_logger().info(f'after amovesx: {ret}')
 
     try:
         movel(white_board_home, VEL, ACC)
@@ -134,8 +132,9 @@ def main(args=None):
             if not move_queue.empty():
                 points = move_queue.get()
 
-                sampled_points = sample_points(points, max_middle=20)
-                traj = convert_to_posx(sampled_points)
+                # sampled_points = sample_points(points, max_middle=20)
+                # traj = convert_to_posx(sampled_points)
+                traj = convert_to_posx(points)
                 node.get_logger().info(f"Splined path 실행: {traj}, {len(traj)}")
                 
                 movel(traj[0], VEL, ACC)
@@ -145,7 +144,10 @@ def main(args=None):
                 node.get_logger().info('pen_down')
 
                 while check_force_condition(DR_AXIS_Z, min=5, max=21): pass
-                set_desired_force(fd=[0, 0, 0.1, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                node.get_logger().info(f'before force = {get_joint_torque()}')
+                release_force()
+                set_desired_force(fd=[0, 0, 5, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+                node.get_logger().info(f'after force = {get_joint_torque()}')
                 node.get_logger().info('touch on board!')
 
                 # 스플라인 명령으로 경로 전체를 연속 실행
@@ -153,19 +155,26 @@ def main(args=None):
                 draw_on_board(traj)
 
                 node.get_logger().info('waiting until drawing is done')
-                while True:
-                    mt = check_motion()
-                    # node.get_logger().info(f'check motion : {mt}')
-                    if mt == 0:
+                # while True:
+                #     mt = check_motion()
+                #     node.get_logger().info(f'check motion : {mt}')
+                #     if mt == 0:
+                #         break
+                # while check_motion() != 0: pass
+                start = time.time()
+                while check_motion() == 2: 
+                    if time.time() - start > 30:
+                        node.get_logger().warn(f'amovesx time out')
                         break
+                node.get_logger().info('done')
 
                 pen_up()
                 node.get_logger().info('pen_up')
         
                 movel(white_board_home, VEL, ACC)
+                node.get_logger().info('comeback to origin')
     except KeyboardInterrupt:
-        release_compliance_ctrl()
-        release_force()
+        release()
         print('Shutting down...')
     node.destroy_node()
     rclpy.shutdown()

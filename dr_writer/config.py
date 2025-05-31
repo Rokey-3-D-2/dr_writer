@@ -1,8 +1,10 @@
 ROBOT_ID = 'dsr01'
 ROBOT_MODEL = 'mo6o9'
 # ROBOT_TOOL = 'Tool Weight_2FG'
-ROBOT_TOOL = 'Tool Weight_RG2'
+# ROBOT_TOOL = 'Tool Weight_RG2'
+ROBOT_TOOL = 'Tool Weight'
 # ROBOT_TCP = '2FG_TCP'
-ROBOT_TCP = 'RG2_TCP'
-VEL = 75
-ACC = 75
+# ROBOT_TCP = 'RG2_TCP'
+ROBOT_TCP = 'GripperDA_v1'
+VEL = 50
+ACC = 50
