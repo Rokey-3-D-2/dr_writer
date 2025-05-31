@@ -8,3 +8,4 @@ ROBOT_TOOL = 'Tool Weight'
 ROBOT_TCP = 'GripperDA_v1'
 VEL = 50
 ACC = 50
+DRAWING_PATH = '/multi_stroke_drawing_path'

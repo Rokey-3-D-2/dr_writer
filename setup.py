@@ -21,11 +21,14 @@ setup(
     entry_points={
         'console_scripts': [
             'drawing = dr_writer.drawing:main',
+            'multi_stroke_drawing = dr_writer.multi_stroke_drawing:main',
+
             'test_movel = dr_writer.test:main',
             'test_topic = dr_writer.test2:main',
             'test_spline = dr_writer.test3:main',
             'test_white_board = dr_writer.test4:main',
             'test_amovesx = dr_writer.test5:main',
+            'multi_stroke_board = dr_writer.multi_stroke_board:main',
         ],
     },
 )
