@@ -59,6 +59,7 @@ def main(args=None):
         get_user_cart_coord,
 
         DR_WHITE_BOARD,
+        DR_WHITE_BOARD2,
         DR_AXIS_Z,
 
         DR_FC_MOD_REL
@@ -74,7 +75,8 @@ def main(args=None):
 
     set_tool(ROBOT_TOOL)
     set_tcp(ROBOT_TCP)
-    set_ref_coord(DR_WHITE_BOARD)
+    # set_ref_coord(DR_WHITE_BOARD)
+    set_ref_coord(DR_WHITE_BOARD2)
 
     node.create_subscription(
         Float32MultiArray,
@@ -152,14 +154,13 @@ def main(args=None):
         current_posx = get_current_posx()[0]
         current_posx[2] -= 5
         release()
+        time.sleep(0.1)
         movel(current_posx, VEL, ACC)
-        # traj[-1][2] -= 5
-        # movel(traj[-1], VEL, ACC)
 
     def check_touch():
         while check_force_condition(DR_AXIS_Z, min=5, max=21): pass
         release_force()
-        set_desired_force(fd=[0, 0, 5, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
+        set_desired_force(fd=[0, 0, 2, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
         node.get_logger().info('touch on board!')
 
     def draw_on_board(traj):
