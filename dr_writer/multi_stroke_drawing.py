@@ -70,8 +70,6 @@ class DrawingNode(Node):
         print(f"Published path with {len(self.path)} points.")
 
         # 캔버스와 경로 데이터 초기화
-        # self.canvas.delete("all")  # 화면 지우기
-        # self.path = []             # 경로도 초기화
         # self.clear_canvas()
 
     def spin(self):
