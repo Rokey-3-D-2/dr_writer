@@ -2,8 +2,7 @@ import rclpy
 import DR_init
 from std_msgs.msg import Float32MultiArray
 import numpy as np
-import queue
-import time
+import queue, time, math
 
 from dr_writer import config
 ROBOT_ID = config.ROBOT_ID
@@ -64,7 +63,6 @@ def main(args=None):
 
         DR_FC_MOD_REL
     )
-
 
     tcp, tool = get_tcp(), get_tool()
     print(f'tcp: {tcp}, tool: {tool}')
@@ -137,9 +135,15 @@ def main(args=None):
         sampled_middle = [middle_points[i] for i in idx]
         sampled = np.vstack([points[0], sampled_middle, points[-1]])
         return sampled.tolist()
+    
+    def sample_points2(points):
+
+        # we have to develop another algorithm for increasing the detail of the drawing
+        
+        pass
 
     def convert_to_posx(sampled_points):
-        return [posx([pt[0], pt[1], 0, 0, 0, 0]) for pt in sampled_points]
+        return [posx([pt[0], pt[1], get_current_posx()[0][2], 0, 0, 0]) for pt in sampled_points]
 
     def release():
         release_compliance_ctrl()
@@ -167,14 +171,42 @@ def main(args=None):
         ret = amovesx(traj, vel=VEL, acc=ACC)
         node.get_logger().info(f'after amovesx: {ret}')
 
-    def check_done():
+    def traj_length(traj):
+        """posx의 3차원 거리 누적 합계(mm 단위)"""
+        dist = 0.0
+        for i in range(1, len(traj)):
+            p0 = traj[i-1]
+            p1 = traj[i]
+
+            # posx 앞 3개(x, y, z)만 거리 계산
+            d = math.sqrt((p1[0] - p0[0])**2 + (p1[1] - p0[1])**2 + (p1[2] - p0[2])**2)
+            dist += d
+        return dist  # mm 단위
+    
+    def estimate_draw_time(traj, vel, acc):
+        """전체 경로길이/속도로 예상 소요시간(sec) 반환"""
+        length_mm = traj_length(traj)
+        if vel <= 0 or acc <= 0 or length_mm <= 0:
+            return 0.0
+
+        # we have to develop algorithm for proper waiting time
+        
+        return 30
+
+    def check_done(traj):
+        expected_time = estimate_draw_time(traj, VEL, ACC)
+        buffer_time = 2
+        total_wait = expected_time + buffer_time
+        node.get_logger().info(f'경로길이: {traj_length(traj):.1f}mm, 예상시간: {expected_time:.2f}s (버퍼포함 {total_wait:.2f}s)')
+        
         node.get_logger().info('waiting until drawing is done')
         start = time.time()
-        while check_motion() == 2: 
-            if time.time() - start > 30:
-                node.get_logger().warn(f'amovesx time out: {time.time() - start:.2f}s')
-                break
-        node.get_logger().info(f'done: {time.time() - start:.2f}s')
+        while time.time() - start < total_wait:
+            if check_motion() == 0:
+                node.get_logger().info(f'[Drawing Success] done: {time.time() - start:.2f}s')
+                return True
+        node.get_logger().warn(f'[Drawing Failure] time out: {time.time() - start:.2f}s')
+        return False
 
     try:
         move_to_home()
@@ -201,7 +233,7 @@ def main(args=None):
 
                     draw_on_board(traj)
 
-                    check_done()
+                    check_done(traj)
 
                     pen_up()
 

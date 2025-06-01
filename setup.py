@@ -29,6 +29,8 @@ setup(
             'test_white_board = dr_writer.test4:main',
             'test_amovesx = dr_writer.test5:main',
             'multi_stroke_board = dr_writer.multi_stroke_board:main',
+            
+            'monitoring = dr_writer.monitoring:main',
         ],
     },
 )
