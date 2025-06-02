@@ -3,10 +3,14 @@ from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 import tkinter as tk
 
+from dr_writer import config
+DRAWING_PAHT = config.DRAWING_PATH
+
 class DrawingNode(Node):
     def __init__(self):
-        super().__init__('drawing_node')
-        self.publisher_ = self.create_publisher(Float32MultiArray, '/drawing_path', 10)
+        super().__init__('multi_stroke_drawing')
+        self.publisher_ = self.create_publisher(Float32MultiArray, DRAWING_PAHT, 10)
+
         self.path = []
         self.is_drawing = False
 
@@ -30,7 +34,7 @@ class DrawingNode(Node):
 
     def start_draw(self, event):
         self.is_drawing = True
-        self.path = [(event.x, event.y)]
+        self.path.append((event.x, event.y))
 
     def draw(self, event):
         if self.is_drawing:
@@ -40,6 +44,7 @@ class DrawingNode(Node):
     def end_draw(self, event):
         if self.is_drawing:
             self.path.append((event.x, event.y))
+            self.path.append((-1, -1))
             self.is_drawing = False
 
     def clear_canvas(self):
@@ -52,6 +57,8 @@ class DrawingNode(Node):
             print("No drawing to send!")
             return
         
+        print(self.path)
+        
         # 2D path를 1D 배열로 평탄화해서 전송: [x0, y0, x1, y1, ...]
         data = []
         for pt in self.path:
@@ -63,8 +70,7 @@ class DrawingNode(Node):
         print(f"Published path with {len(self.path)} points.")
 
         # 캔버스와 경로 데이터 초기화
-        self.canvas.delete("all")  # 화면 지우기
-        self.path = []             # 경로도 초기화
+        # self.clear_canvas()
 
     def spin(self):
         self.root.mainloop()
