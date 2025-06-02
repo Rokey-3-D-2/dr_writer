@@ -12,12 +12,15 @@ ROBOT_TCP = config.ROBOT_TCP
 VEL = config.VEL 
 ACC = config.ACC
 DRAWING_PAHT = config.DRAWING_PATH
+SAMPLE_THRESHOLD = config.SAMPLE_THRESHOLD
 
 # 전역 큐
 strokes_queue = queue.Queue()
 
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
+
+get_end = lambda start: time.time() - start
 
 def listener_callback(msg):
     data = msg.data
@@ -112,7 +115,7 @@ def main(args=None):
 
         return splited_strokes
 
-    def sample_points(points, max_middle=20):
+    def sample_points(points, max_middle=SAMPLE_THRESHOLD):
         """
         - points: (N, 2) 형태의 list 또는 np.ndarray
         - 시작점, 끝점은 반드시 포함
@@ -142,9 +145,22 @@ def main(args=None):
         
         pass
 
-    def convert_to_posx(sampled_points):
-        return [posx([pt[0], pt[1], get_current_posx()[0][2], 0, 0, 0]) for pt in sampled_points]
+    def _get_cur_posx():
+        start = time.time()
+        while time.time() - start < 5:
+            try:
+                cur_posx = get_current_posx()
+                return cur_posx
+            except IndexError as e:
+                node.get_logger().warn(f'{e}')
+                time.sleep(0.1)
+                continue
+        node.get_logger().error('can not get posx from [get_current_posx]')
+        return posx([0,0,0,0,0,0])
 
+    def convert_to_posx(sampled_points):
+        return [posx([pt[0], pt[1], _get_cur_posx()[0][2], 0, 0, 0]) for pt in sampled_points]
+        
     def release():
         release_compliance_ctrl()
         release_force()
@@ -155,7 +171,7 @@ def main(args=None):
         set_desired_force(fd=[0, 0, 20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL)
 
     def pen_up():
-        current_posx = get_current_posx()[0]
+        current_posx = _get_cur_posx()[0]
         current_posx[2] -= 5
         release()
         time.sleep(0.1)
@@ -201,11 +217,24 @@ def main(args=None):
         
         node.get_logger().info('waiting until drawing is done')
         start = time.time()
-        while time.time() - start < total_wait:
+        before_posx, cur_cnt, max_cnt = _get_cur_posx()[0], 0, 5
+        while get_end(start) < total_wait:
             if check_motion() == 0:
-                node.get_logger().info(f'[Drawing Success] done: {time.time() - start:.2f}s')
+                node.get_logger().info(f'[Drawing Success] done: {get_end(start):.2f}s')
                 return True
-        node.get_logger().warn(f'[Drawing Failure] time out: {time.time() - start:.2f}s')
+
+            if before_posx == _get_cur_posx()[0]:
+                cur_cnt += 1
+            else:
+                cur_cnt = 0
+
+            if cur_cnt > max_cnt:
+                node.get_logger().warn(f'[Drawing Failure] abnormal behavior')
+                return False
+
+            time.sleep(0.1)
+
+        node.get_logger().warn(f'[Drawing Failure] time out: {get_end(start):.2f}s')
         return False
 
     try:
