@@ -29,6 +29,8 @@ setup(
             'test_amovesx = dr_writer.test5:main',
             'multi_stroke_board = dr_writer.multi_stroke_board:main',
             
+            'edge_extractor = dr_writer.edge_extractor:main',
+
             'monitoring = dr_writer.monitoring:main',
         ],
     },
