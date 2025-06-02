@@ -207,7 +207,9 @@ def main(args=None):
 
         # we have to develop algorithm for proper waiting time
         
-        return 30
+        # return 30
+        base_time = length_mm / vel  # [mm] / [mm/s] = [s]
+        return base_time * 1.5
 
     def check_done(traj):
         expected_time = estimate_draw_time(traj, VEL, ACC)
