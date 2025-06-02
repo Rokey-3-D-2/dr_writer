@@ -21,6 +21,7 @@ setup(
         'console_scripts': [
             'drawing = dr_writer.drawing:main',
             'multi_stroke_drawing = dr_writer.multi_stroke_drawing:main',
+            'multi_stroke_drawing_img = dr_writer.multi_stroke_drawing_img:main',
 
             'test_movel = dr_writer.test:main',
             'test_topic = dr_writer.test2:main',
