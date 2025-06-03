@@ -32,4 +32,4 @@ ros2 run dr_write multi_stroke_board
 
 ### reference
 
-[참고영상](https://drive.google.com/file/d/1qMzNq5Bk4jpOpDGAaUjZX8tPxBqWFZZe/view?usp=sharing)
+[참고영상](https://drive.google.com/file/d/1LCZrqFsJVc3LZubnmM08KKs--QvzH3l-/view?usp=sharing)
