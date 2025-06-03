@@ -70,28 +70,29 @@ def extract_single_line_contours(img_gray, canvas_size=(400, 400)):
 #         path.append((-1, -1))
 #     return path
 
-def extract_curve_path_from_image(image_path, canvas_size=(400, 400)):
-    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    if img is None:
-        print("이미지를 불러오지 못했습니다:", image_path)
-        return []
+# def extract_curve_path_from_image(image_path, canvas_size=(400, 400)):
+#     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+#     if img is None:
+#         print("이미지를 불러오지 못했습니다:", image_path)
+#         return []
 
-    img_resized = cv2.resize(img, canvas_size, interpolation=cv2.INTER_AREA)
+#     img_resized = cv2.resize(img, canvas_size, interpolation=cv2.INTER_AREA)
 
-    # Canny 대신 Threshold로 단일 윤곽선 검출
-    _, thresh = cv2.threshold(img_resized, 200, 255, cv2.THRESH_BINARY_INV)
+#     # Canny 대신 Threshold로 단일 윤곽선 검출
+#     _, thresh = cv2.threshold(img_resized, 200, 255, cv2.THRESH_BINARY_INV)
 
-    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+#     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
 
-    path = []
-    for contour in contours:
-        if cv2.arcLength(contour, True) < 100:  # 너무 짧은 곡선은 무시
-            continue
-        for pt in contour:
-            x, y = pt[0]
-            path.append((x, y))
-        path.append((-1, -1))
-    return path
+#     path = []
+#     for contour in contours:
+#         if cv2.arcLength(contour, True) < 100:  # 너무 짧은 곡선은 무시
+#             continue
+#         for pt in contour:
+#             x, y = pt[0]
+#             path.append((x, y))
+#         path.append((-1, -1))
+#     return path
+
 
 def extract_circles_from_image(image_path, canvas_size=(400, 400)):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -263,8 +264,8 @@ class DrawingNode(Node):
         curves = extract_curve_path_from_image(image_path, canvas_size)
         circles = detect_circles_refined(img_gray, canvas_size)
 
-        # self.path = lines + curves + circles
-        self.path = circles
+        self.path = lines + curves + circles
+        # self.path = circles
         self.draw_path_on_canvas()
         self.publish_path()
 
