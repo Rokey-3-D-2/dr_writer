@@ -17,7 +17,7 @@ class EdgeExtractorNode(Node):
 
     def process_image(self):
         # 이미지 읽기 & 엣지 추출
-        img = cv2.imread("/home/lhj/Downloads/test_flower_images.png", cv2.IMREAD_GRAYSCALE)
+        img = cv2.imread("test_flower_images.png", cv2.IMREAD_GRAYSCALE)
         
         h, w = img.shape
         scale = 200 / max(h, w)
