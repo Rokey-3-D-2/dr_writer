@@ -15,82 +15,79 @@ DRAWING_PAHT = config.DRAWING_PATH
 SAMPLE_THRESHOLD = config.SAMPLE_THRESHOLD
 SAMPLE_RATIO = config.SAMPLE_RATIO
 
-rclpy.init()
-
 import DR_init
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
 
 from DR_common2 import posx
-from DSR_ROBOT2 import (
-    get_tcp, get_tool,
-    set_tcp, set_tool, 
-    set_ref_coord,
-
-    set_digital_output,
-    get_digital_input,
-    wait,
-    
-    movel, amovesx,
-    check_motion,
-    
-    check_force_condition,
-    task_compliance_ctrl,
-    release_compliance_ctrl,
-    set_desired_force,
-    release_force,
-
-    get_current_posx,
-
-    DR_WHITE_BOARD2,
-    DR_AXIS_Z,
-
-    DR_FC_MOD_REL
-)
 
 ON, OFF = 1, 0
 
 get_end = lambda start: time.time() - start
 
 class Gripper:
+    def set_dependencies(
+            self,
+            
+            set_digital_output,
+            get_digital_input,
+            wait,
+        ):
+
+        self.get_digital_input = get_digital_input
+        self.wait = wait
+        self.set_digital_output = set_digital_output
+
     def wait_digital_input(self, sig_num):
-        while not get_digital_input(sig_num):
-            wait(0.5)
+        while not self.get_digital_input(sig_num):
+            self.wait(0.5)
             print("[wait_digital_input]")
             pass
 
     def open_grip(self):
-        set_digital_output(2, ON)
-        set_digital_output(1, OFF)
+        self.set_digital_output(2, ON)
+        self.set_digital_output(1, OFF)
         self.wait_digital_input(2)
 
     def close_grip(self):
         self.open_grip()
-        set_digital_output(1, ON)
-        set_digital_output(2, OFF)
+        self.set_digital_output(1, ON)
+        self.set_digital_output(2, OFF)
         self.wait_digital_input(1)
 
 class Mover:
     white_board_home = posx([0, 0, 0, 0, 0, 0])
     pen_holder = posx([2.970, 574.210, -136.250, 90.0, 88.17, -91.58])
+    
+    def set_dependencies(
+            self,
+
+            movel, 
+
+            get_current_posx,
+        ):
+
+        self.movel = movel
+        self.get_current_posx = get_current_posx
 
     def move_to_home(self):
-        movel(self.white_board_home, VEL, ACC)
+        self.movel(self.white_board_home, VEL, ACC)
+        print(__name__)
 
     def move_to_start(self, traj):
-        movel(traj[0], VEL, ACC)
+        self.movel(traj[0], VEL, ACC)
 
     def move_to_pen_holder(self):
-        movel(self.pen_holder, VEL, ACC)
+        self.movel(self.pen_holder, VEL, ACC)
 
     def down_to_pen_holder(self):
         self.pen_holder[1] += 8
-        movel(self.pen_holder, VEL, ACC)
+        self.movel(self.pen_holder, VEL, ACC)
         self.pen_holder[1] += 2
 
     def up_from_pen_holder(self):
         self.pen_holder[1] -= 10
-        movel(self.pen_holder, VEL, ACC)
+        self.movel(self.pen_holder, VEL, ACC)
 
     def pen_down(self, callback):
         """로봇 펜을 보드(종이)로 누르는 동작을 수행합니다."""
@@ -102,7 +99,7 @@ class Mover:
         current_posx[2] -= 5
         callback()
         time.sleep(0.1)
-        movel(current_posx, VEL, ACC)
+        self.movel(current_posx, VEL, ACC)
 
     def _get_cur_posx(self):
         """
@@ -120,7 +117,7 @@ class Mover:
         start = time.time()
         while time.time() - start < 5:
             try:
-                cur_posx = get_current_posx()
+                cur_posx = self.get_current_posx()
                 return cur_posx
             except IndexError as e:
                 time.sleep(0.1)
@@ -128,26 +125,51 @@ class Mover:
         return posx([0,0,0,0,0,0])
     
 class Forcer:
-    def force_on(self, fd=[0, 0, 20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL):
+    def set_dependencies(
+            self,
+
+            check_force_condition,
+            task_compliance_ctrl,
+            release_compliance_ctrl,
+            set_desired_force,
+            release_force,
+
+            DR_AXIS_Z,
+
+            DR_FC_MOD_REL
+        ):
+
+        self.task_compliance_ctrl = task_compliance_ctrl
+        self.set_desired_force = set_desired_force
+        self.release_force = release_force
+        self.release_compliance_ctrl = release_compliance_ctrl
+        self.check_force_condition = check_force_condition
+        self.DR_AXIS_Z = DR_AXIS_Z
+        self.DR_FC_MOD_REL = DR_FC_MOD_REL
+
+    def force_on(self, fd=[0, 0, 20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0]):
         """로봇 펜을 보드(종이)로 누르는 동작을 수행합니다."""
-        task_compliance_ctrl()
+        self.task_compliance_ctrl()
         time.sleep(0.1)
-        set_desired_force(fd=fd, dir=dir, mod=mod)
+        self.set_desired_force(fd=fd, dir=dir, mod=self.DR_FC_MOD_REL)
 
     def force_off(self):
         """로봇의 힘/컴플라이언스(유연제어) 제어를 모두 해제합니다."""
-        release_force()
-        release_compliance_ctrl()
+        self.release_force()
+        self.release_compliance_ctrl()
 
-    def check_touch(self, fd=[0, 0, 2, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0], mod=DR_FC_MOD_REL):
+    def check_touch(self, fd=[0, 0, 2, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0]):
         """Z축 힘(접촉력)이 5~21 사이가 될 때까지 대기"""
-        while check_force_condition(DR_AXIS_Z, min=5, max=21): pass
-        release_force()
-        set_desired_force(fd=fd, dir=dir, mod=mod)
+        while self.check_force_condition(self.DR_AXIS_Z, min=5, max=21): pass
+        self.release_force()
+        self.set_desired_force(fd=fd, dir=dir, mod=self.DR_FC_MOD_REL)
 
-class DrawerAndEraser(Node):
-    def __init__(self):
-        super().__init__('drawer_and_eraser', namespace=ROBOT_ID)
+# class DrawerAndEraser(Node):
+class DrawerAndEraser:
+    def __init__(self, node: Node):
+        # super().__init__('drawer_and_eraser', namespace=ROBOT_ID)
+
+        self.node = node
 
         self.gripper = Gripper()
         self.mover = Mover()
@@ -155,13 +177,61 @@ class DrawerAndEraser(Node):
 
         self.strokes_queue = queue.Queue()
 
-        self.create_subscription(
+        self.node.create_subscription(
             Float32MultiArray,
             DRAWING_PAHT,
             self.listener_callback,
             10
         )
-        self.create_timer(0.1, self.timer_callback)
+        # self.create_timer(0.1, self.timer_callback)
+
+    def set_dependencies(
+            self, 
+            
+            set_digital_output,
+            get_digital_input,
+            wait,
+            
+            movel, amovesx,
+            check_motion,
+            
+            check_force_condition,
+            task_compliance_ctrl,
+            release_compliance_ctrl,
+            set_desired_force,
+            release_force,
+
+            get_current_posx,
+
+            DR_AXIS_Z,
+
+            DR_FC_MOD_REL
+        ):
+
+        self.amovesx = amovesx
+        self.check_motion = check_motion
+
+        self.gripper.set_dependencies(
+            set_digital_output,
+            get_digital_input,
+            wait,
+        )
+        self.mover.set_dependencies(
+            movel, 
+
+            get_current_posx,
+        )
+        self.forcer.set_dependencies(
+            check_force_condition,
+            task_compliance_ctrl,
+            release_compliance_ctrl,
+            set_desired_force,
+            release_force,
+
+            DR_AXIS_Z,
+
+            DR_FC_MOD_REL
+        )
 
     def listener_callback(self, msg):
         data = msg.data
@@ -178,14 +248,15 @@ class DrawerAndEraser(Node):
         if self.strokes_queue.empty():
             return  # strokes_queue에 토픽 없으면 종료
         
+        self.node.get_logger().info(__name__)
         self.mover.move_to_home()
 
-        self.get_logger().info('Start to hold the pen')
+        self.node.get_logger().info('Start to hold the pen')
         self.gripper.open_grip()            # 그리퍼 열고
         self.mover.move_to_pen_holder()     # 펜 홀더 가서
         self.gripper.close_grip()           # 펜 쥐고
         self.mover.up_from_pen_holder()     # 살짝 위로 올라오기
-        self.get_logger().info('Now holding the pen')
+        self.node.get_logger().info('Now holding the pen')
 
         self.mover.move_to_home()
 
@@ -193,40 +264,40 @@ class DrawerAndEraser(Node):
         splited_strokes = self.split_strokes(strokes)
 
         for stroke in splited_strokes:
-            self.get_logger().info(f'stroke: {stroke}, {len(stroke)}')
+            self.node.get_logger().info(f'stroke: {stroke}, {len(stroke)}')
             
             sampled_points  = self.sample_points(stroke)
-            self.get_logger().info(f'sampled_points: {sampled_points}, {len(sampled_points)}')
+            self.node.get_logger().info(f'sampled_points: {sampled_points}, {len(sampled_points)}')
 
             traj            = self.convert_to_posx(sampled_points)
-            self.get_logger().info(f'traj: {traj}, {len(traj)}')
+            self.node.get_logger().info(f'traj: {traj}, {len(traj)}')
 
-            self.get_logger().info('[move_to_start] start')
+            self.node.get_logger().info('[move_to_start] start')
             self.mover.move_to_start(traj)
-            self.get_logger().info('[move_to_start] done')
+            self.node.get_logger().info('[move_to_start] done')
 
-            self.get_logger().info('[pen_down] start')
+            self.node.get_logger().info('[pen_down] start')
             self.mover.pen_down(self.forcer.force_on)
-            self.get_logger().info('[pen_down] done')
+            self.node.get_logger().info('[pen_down] done')
             
-            self.get_logger().info('[check_touch] start')
+            self.node.get_logger().info('[check_touch] start')
             self.forcer.check_touch()
-            self.get_logger().info('[check_touch] done')
+            self.node.get_logger().info('[check_touch] done')
 
             self.draw_on_board(traj)
             self.check_done(traj)
 
-            self.get_logger().info('[pen_up] start')
+            self.node.get_logger().info('[pen_up] start')
             self.mover.pen_up(self.forcer.force_off)
-            self.get_logger().info('[pen_up] done')
+            self.node.get_logger().info('[pen_up] done')
 
         self.mover.move_to_home()
 
-        self.get_logger().info('Start to release the pen')
+        self.node.get_logger().info('Start to release the pen')
         self.mover.move_to_pen_holder()     # 펜홀더 가서
         self.mover.down_to_pen_holder()     # 살짝 내려가서
         self.gripper.open_grip()            # 그리퍼 풀기
-        self.get_logger().info('Now releasing the pen')
+        self.node.get_logger().info('Now releasing the pen')
 
         self.mover.move_to_home()
     
@@ -282,7 +353,7 @@ class DrawerAndEraser(Node):
         n = len(points)
         if n <= 2:
             # 점이 2개 이하면 그대로 반환
-            self.get_logger().info(f'[sample_points]: {points}')
+            self.node.get_logger().info(f'[sample_points]: {points}')
             return points
         
         # 중간점 개수 계산
@@ -290,13 +361,13 @@ class DrawerAndEraser(Node):
         num_middle = min(max_middle, max(1, int((n - 2) * SAMPLE_RATIO)))
         if num_middle < 1:
             # 중간 경유점이 아예 없거나 너무 적음
-            self.get_logger().info(f'[sample_points]: {points}')
+            self.node.get_logger().info(f'[sample_points]: {points}')
             return points
         
         idx = np.linspace(0, len(middle_points)-1, num_middle, dtype=int)
         sampled_middle = [middle_points[i] for i in idx]
         sampled_points = np.vstack([points[0], sampled_middle, points[-1]]).tolist()
-        self.get_logger().info(f'[sample_points]: {sampled_points}')
+        self.node.get_logger().info(f'[sample_points]: {sampled_points}')
         return sampled_points
     
     def convert_to_posx(self, sampled_points):
@@ -316,8 +387,8 @@ class DrawerAndEraser(Node):
 
     def draw_on_board(self, traj):
         """입력된 trajectory(traj)대로 비동기 방식(amovesx)으로 보드에 선을 그립니다"""
-        ret = amovesx(traj, vel=VEL, acc=ACC)
-        self.get_logger().info(f'[draw_on_board]: {ret}')
+        ret = self.amovesx(traj, vel=VEL, acc=ACC)
+        self.node.get_logger().info(f'[draw_on_board]: {ret}')
 
     def check_done(self, traj):
         """
@@ -360,14 +431,14 @@ class DrawerAndEraser(Node):
         expected_time = estimate_draw_time(traj, VEL, ACC)
         buffer_time = 2
         total_wait = expected_time + buffer_time
-        self.get_logger().info(f'경로길이: {traj_length(traj):.1f}mm, 예상시간: {expected_time:.2f}s (버퍼포함 {total_wait:.2f}s)')
+        self.node.get_logger().info(f'경로길이: {traj_length(traj):.1f}mm, 예상시간: {expected_time:.2f}s (버퍼포함 {total_wait:.2f}s)')
         
-        self.get_logger().info('[check_done] waiting until drawing is done')
+        self.node.get_logger().info('[check_done] waiting until drawing is done')
         start = time.time()
         before_posx, cur_cnt, max_cnt = self.mover._get_cur_posx()[0], 0, 5
         while get_end(start) < total_wait:
-            if check_motion() == 0:
-                self.get_logger().info(f'[Drawing Success] done: {get_end(start):.2f}s')
+            if self.check_motion() == 0:
+                self.node.get_logger().info(f'[Drawing Success] done: {get_end(start):.2f}s')
                 return True
 
             if before_posx == self.mover._get_cur_posx()[0]:
@@ -376,17 +447,66 @@ class DrawerAndEraser(Node):
                 cur_cnt = 0
 
             if cur_cnt > max_cnt:
-                self.get_logger().warn(f'[Drawing Failure] abnormal behavior')
+                self.node.get_logger().warn(f'[Drawing Failure] abnormal behavior')
                 return False
 
             time.sleep(0.1)
 
-        self.get_logger().warn(f'[Drawing Failure] time out: {get_end(start):.2f}s')
+        self.node.get_logger().warn(f'[Drawing Failure] time out: {get_end(start):.2f}s')
         return False
 
 def main():
-    node = DrawerAndEraser()
+    rclpy.init()
+    node = rclpy.create_node('drawer_and_eraser', namespace=ROBOT_ID)
+    drawer_and_eraser = DrawerAndEraser(node)
     DR_init.__dsr__node = node
+
+    from DSR_ROBOT2 import (
+        get_tcp, get_tool,
+        set_tcp, set_tool, 
+        set_ref_coord,
+
+        set_digital_output,
+        get_digital_input,
+        wait,
+        
+        movel, amovesx,
+        check_motion,
+        
+        check_force_condition,
+        task_compliance_ctrl,
+        release_compliance_ctrl,
+        set_desired_force,
+        release_force,
+
+        get_current_posx,
+
+        DR_WHITE_BOARD2,
+        DR_AXIS_Z,
+
+        DR_FC_MOD_REL
+    )
+
+    drawer_and_eraser.set_dependencies(
+        set_digital_output,
+        get_digital_input,
+        wait,
+
+        movel, amovesx,
+        check_motion,
+        
+        check_force_condition,
+        task_compliance_ctrl,
+        release_compliance_ctrl,
+        set_desired_force,
+        release_force,
+
+        get_current_posx,
+
+        DR_AXIS_Z,
+
+        DR_FC_MOD_REL
+    )
 
     set_tool(ROBOT_TOOL)
     set_tcp(ROBOT_TCP)
@@ -395,19 +515,21 @@ def main():
     tcp, tool = get_tcp(), get_tool()
     print(f'tcp: {tcp}, tool: {tool}')
     if tcp != ROBOT_TCP or tool != ROBOT_TOOL:
-        node.destroy_node()
+        drawer_and_eraser.node.destroy_node()
         return
 
     try:
-        rclpy.spin(node)
+        print('Spin start')
+        while True:
+            rclpy.spin_once(node, timeout_sec=0.1)
+            drawer_and_eraser.timer_callback()
     except KeyboardInterrupt:
-        node.forcer.force_off()
-        node.get_logger().info('Shutting down...')
+        drawer_and_eraser.forcer.force_off()
+        print('Shutting down...')
         pass        
 
-    node.destroy_node()
+    drawer_and_eraser.node.destroy_node()
+    rclpy.shutdown()
 
 if __name__ == "__main__":
     main()
-
-rclpy.shutdown()
