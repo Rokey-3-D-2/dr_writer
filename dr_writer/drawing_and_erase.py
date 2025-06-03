@@ -175,7 +175,7 @@ class Forcer:
         self.DR_FC_MOD_REL = DR_FC_MOD_REL
 
     def force_on(self, fd=[0, 0, 20, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0]):
-        """로봇 펜을 보드(종이)로 누르는 동작을 수행합니다."""
+        """로봇 펜/지우개을 보드에 누르는 동작을 수행합니다."""
         self.task_compliance_ctrl()
         time.sleep(0.1)
         self.set_desired_force(fd=fd, dir=dir, mod=self.DR_FC_MOD_REL)
@@ -185,8 +185,9 @@ class Forcer:
         self.release_force()
         self.release_compliance_ctrl()
 
-    def check_touch(self, fd=[0, 0, 2, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0]):
+    def check_touch(self, mode, fd = [0, 0, 2, 0, 0, 0], dir=[0, 0, 1, 0, 0, 0]):
         """Z축 힘(접촉력)이 5~21 사이가 될 때까지 대기"""
+        if mode == 2: fd[2] = 5 # erase mode
         while self.check_force_condition(self.DR_AXIS_Z, min=5, max=21): pass
         self.release_force()
         self.set_desired_force(fd=fd, dir=dir, mod=self.DR_FC_MOD_REL)
@@ -313,7 +314,7 @@ class DrawerAndEraser:
             self.node.get_logger().info('[pen_down] done')
             
             self.node.get_logger().info('[check_touch] start')
-            self.forcer.check_touch()
+            self.forcer.check_touch(mode)
             self.node.get_logger().info('[check_touch] done')
 
             self.draw_on_board(traj)
@@ -323,7 +324,7 @@ class DrawerAndEraser:
             self.mover.pen_up(self.forcer.force_off)
             self.node.get_logger().info('[pen_up] done')
 
-        self.mover.move_to_home()
+        # self.mover.move_to_home()
 
         self.node.get_logger().info('Start to release the pen')
         self.mover.move_to_holder(mode)     # 홀더로 가서
