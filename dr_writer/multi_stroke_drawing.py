@@ -3,10 +3,14 @@ from rclpy.node import Node
 from std_msgs.msg import Float32MultiArray
 import tkinter as tk
 
+from dr_writer import config
+DRAWING_PAHT = config.DRAWING_PATH
+
 class DrawingNode(Node):
     def __init__(self):
-        super().__init__('drawing_node')
-        self.publisher_ = self.create_publisher(Float32MultiArray, '/drawing_path', 10)
+        super().__init__('multi_stroke_drawing')
+        self.publisher_ = self.create_publisher(Float32MultiArray, DRAWING_PAHT, 10)
+
         self.path = []
         self.is_drawing = False
 
@@ -25,12 +29,15 @@ class DrawingNode(Node):
         self.finish_button = tk.Button(self.button_frame, text="Send Path", command=self.publish_path)
         self.finish_button.pack(side=tk.LEFT, padx=10)
 
+        self.undo_button = tk.Button(self.button_frame, text="Undo", command=self.undo_stroke)
+        self.undo_button.pack(side=tk.LEFT, padx=10)
+
         self.clear_button = tk.Button(self.button_frame, text="Clear", command=self.clear_canvas)
         self.clear_button.pack(side=tk.LEFT, padx=10)
 
     def start_draw(self, event):
         self.is_drawing = True
-        self.path = [(event.x, event.y)]
+        self.path.append((event.x, event.y))
 
     def draw(self, event):
         if self.is_drawing:
@@ -40,7 +47,42 @@ class DrawingNode(Node):
     def end_draw(self, event):
         if self.is_drawing:
             self.path.append((event.x, event.y))
+            self.path.append((-1, -1))
             self.is_drawing = False
+
+    def undo_stroke(self):
+        # 아무것도 없으면 리턴
+        if not self.path:
+            print("No stroke to undo.")
+            return
+
+        # 마지막 stroke의 시작을 찾음
+        idx = len(self.path) - 1
+        second = False
+        while idx >= 0:
+            if self.path[idx] == (-1, -1):
+                if second:
+                    break
+                else:
+                    second = True
+            idx -= 1
+
+        # idx 다음부터 끝까지 삭제 (즉, 마지막 stroke 삭제)
+        self.path = self.path[:idx+1]
+
+        # 캔버스 다시 그리기
+        self.canvas.delete("all")
+        if self.path:
+            points = []
+            for pt in self.path:
+                if pt == (-1, -1):
+                    points = []
+                else:
+                    if points:
+                        self.canvas.create_line(points[-1][0], points[-1][1], pt[0], pt[1])
+                    points.append(pt)
+
+        print("Undo last stroke.")
 
     def clear_canvas(self):
         self.canvas.delete("all")  # 화면 지우기
@@ -51,6 +93,8 @@ class DrawingNode(Node):
         if not self.path:
             print("No drawing to send!")
             return
+        
+        print(self.path)
         
         # 2D path를 1D 배열로 평탄화해서 전송: [x0, y0, x1, y1, ...]
         data = []
@@ -63,8 +107,7 @@ class DrawingNode(Node):
         print(f"Published path with {len(self.path)} points.")
 
         # 캔버스와 경로 데이터 초기화
-        self.canvas.delete("all")  # 화면 지우기
-        self.path = []             # 경로도 초기화
+        # self.clear_canvas()
 
     def spin(self):
         self.root.mainloop()
