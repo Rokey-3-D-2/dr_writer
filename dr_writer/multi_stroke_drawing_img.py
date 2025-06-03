@@ -93,6 +93,120 @@ def extract_single_line_contours(img_gray, canvas_size=(400, 400)):
 #         path.append((-1, -1))
 #     return path
 
+# def extract_curve_path_from_image(image_path, canvas_size=(400, 400)):
+#     import numpy as np
+#     import cv2
+#     import math
+
+#     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+#     if img is None:
+#         print("이미지를 불러오지 못했습니다:", image_path)
+#         return []
+
+#     img_resized = cv2.resize(img, canvas_size, interpolation=cv2.INTER_AREA)
+#     _, thresh = cv2.threshold(img_resized, 200, 255, cv2.THRESH_BINARY_INV)
+
+#     contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+#     def angle_between(v1, v2):
+#         unit_v1 = v1 / (np.linalg.norm(v1) + 1e-6)
+#         unit_v2 = v2 / (np.linalg.norm(v2) + 1e-6)
+#         dot_product = np.clip(np.dot(unit_v1, unit_v2), -1.0, 1.0)
+#         return np.arccos(dot_product) * 180 / math.pi
+
+#     path = []
+#     for contour in contours:
+#         if len(contour) < 3 or cv2.arcLength(contour, True) < 100:
+#             continue
+
+#         prev_pt = contour[0][0]
+#         path.append(tuple(prev_pt))
+
+#         for i in range(1, len(contour) - 1):
+#             curr_pt = contour[i][0]
+#             next_pt = contour[i + 1][0]
+            
+
+#             # 벡터 계산
+#             v1 = np.array(curr_pt) - np.array(prev_pt)
+#             v2 = np.array(next_pt) - np.array(curr_pt)
+
+#             angle = angle_between(v1, v2)
+
+#             # 현재 점 추가
+#             path.append(tuple(curr_pt))
+
+#             # 각도가 급하게 꺾이면 -1, -1 삽입
+#             if angle > 80:  # 80도 이상 꺾임으로 간주
+#                 path.append((-1, -1))
+#                 # 1879
+#                 print("curr_pt: ", curr_pt, "type: ", type(curr_pt))
+#                 print("prev_pt: ", prev_pt, "type: ", type(prev_pt))
+#                 print("next_pt: ", next_pt, "type: ", type(next_pt))
+#                 print("----------------")
+
+#             prev_pt = curr_pt
+
+#         # 마지막 점과 종결자
+#         path.append(tuple(contour[-1][0]))
+#         path.append((-1, -1))
+
+#     return path
+
+def extract_curve_path_from_image(image_path, canvas_size=(400, 400), step=5):
+    import numpy as np
+    import cv2
+    import math
+
+    img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if img is None:
+        print("이미지를 불러오지 못했습니다:", image_path)
+        return []
+
+    img_resized = cv2.resize(img, canvas_size, interpolation=cv2.INTER_AREA)
+    _, thresh = cv2.threshold(img_resized, 200, 255, cv2.THRESH_BINARY_INV)
+    contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_NONE)
+
+    def calc_angle(v1, v2):
+        unit_v1 = v1 / (np.linalg.norm(v1) + 1e-6)
+        unit_v2 = v2 / (np.linalg.norm(v2) + 1e-6)
+        dot = np.clip(np.dot(unit_v1, unit_v2), -1.0, 1.0)
+        return np.arccos(dot) * 180 / math.pi
+
+    path = []
+    for contour in contours:
+        contour = [pt[0] for pt in contour]
+        if len(contour) < step * 2 + 1 or cv2.arcLength(np.array(contour).reshape(-1, 1, 2), True) < 100:
+            continue
+
+        cooldown = 0
+        i = 0
+        while i < len(contour):
+            path.append(tuple(contour[i]))
+
+            if cooldown > 0:
+                cooldown -= 1
+                i += 1
+                continue
+
+            if i >= step and i + step < len(contour):
+                prev_vec = np.mean(np.diff(contour[i - step:i], axis=0), axis=0)
+                next_vec = np.mean(np.diff(contour[i + 1:i + 1 + step], axis=0), axis=0)
+
+                angle = calc_angle(prev_vec, next_vec)
+
+                if angle > 40:
+                    path.append((-1, -1))
+                    cooldown = step  # 스텝만큼 쉬고 다시 검사
+
+            i += 1
+
+        path.append((-1, -1))
+
+    return path
+
+
+
 
 def extract_circles_from_image(image_path, canvas_size=(400, 400)):
     img = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
@@ -215,7 +329,7 @@ class DrawingNode(Node):
 
         data = []
         for pt in self.path:
-            print("pt: ", pt)
+            # print("pt: ", pt)
             data.extend([float(pt[0] / 2), float(pt[1] / 2)])
 
         msg = Float32MultiArray()
