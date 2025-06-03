@@ -10,3 +10,4 @@ VEL = 100
 ACC = 100
 DRAWING_PATH = '/multi_stroke_drawing_path'
 SAMPLE_THRESHOLD = 127
+SAMPLE_RATIO = 0.2
