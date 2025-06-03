@@ -38,14 +38,14 @@ def main(args=None):
     node = rclpy.create_node("multi_stroke_board", namespace=ROBOT_ID)
     DR_init.__dsr__node = node
 
-    from DR_common2 import posx, posj
+    from DR_common2 import posx
     from DSR_ROBOT2 import (
         get_tcp, get_tool,
         set_tcp, set_tool, 
         set_ref_coord,
         
-        movej, movel, movesx, amovesx,
-        check_motion, mwait,
+        movel, amovesx,
+        check_motion,
         
         check_force_condition,
         task_compliance_ctrl,
@@ -54,13 +54,7 @@ def main(args=None):
         release_force,
 
         get_current_posx,
-        get_tool_force,
-        get_joint_torque,
-        
-        set_user_cart_coord,
-        get_user_cart_coord,
 
-        DR_WHITE_BOARD,
         DR_WHITE_BOARD2,
         DR_AXIS_Z,
 
@@ -138,12 +132,6 @@ def main(args=None):
         sampled_middle = [middle_points[i] for i in idx]
         sampled = np.vstack([points[0], sampled_middle, points[-1]])
         return sampled.tolist()
-    
-    def sample_points2(points):
-
-        # we have to develop another algorithm for increasing the detail of the drawing
-        
-        pass
 
     def _get_cur_posx():
         start = time.time()
@@ -159,7 +147,8 @@ def main(args=None):
         return posx([0,0,0,0,0,0])
 
     def convert_to_posx(sampled_points):
-        return [posx([pt[0], pt[1], _get_cur_posx()[0][2], 0, 0, 0]) for pt in sampled_points]
+        z = _get_cur_posx()[0][2]
+        return [posx([pt[0], pt[1], z, 0, 0, 0]) for pt in sampled_points]
         
     def release():
         release_compliance_ctrl()
@@ -205,9 +194,8 @@ def main(args=None):
         if vel <= 0 or acc <= 0 or length_mm <= 0:
             return 0.0
 
-        # we have to develop algorithm for proper waiting time
-        
-        return 30
+        base_time = length_mm / vel  # [mm] / [mm/s] = [s]
+        return base_time * 1.5 if base_time > 20 else 30
 
     def check_done(traj):
         expected_time = estimate_draw_time(traj, VEL, ACC)

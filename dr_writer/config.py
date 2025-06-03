@@ -9,4 +9,4 @@ ROBOT_TCP = 'GripperDA_v1'
 VEL = 100
 ACC = 100
 DRAWING_PATH = '/multi_stroke_drawing_path'
-SAMPLE_THRESHOLD = 30
+SAMPLE_THRESHOLD = 127
