@@ -34,6 +34,7 @@ def extract_lines_from_image(image_path, canvas_size=(400, 400)):
             path.append((x1, y1))
             path.append((x2, y2))
             path.append((-1, -1))
+            
     return path
 def extract_single_line_contours(img_gray, canvas_size=(400, 400)):
     img_resized = cv2.resize(img_gray, canvas_size)
@@ -262,7 +263,8 @@ class DrawingNode(Node):
         curves = extract_curve_path_from_image(image_path, canvas_size)
         circles = detect_circles_refined(img_gray, canvas_size)
 
-        self.path = lines + curves + circles
+        # self.path = lines + curves + circles
+        self.path = circles
         self.draw_path_on_canvas()
         self.publish_path()
 
