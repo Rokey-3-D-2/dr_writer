@@ -378,7 +378,8 @@ class DrawingNode(Node):
         curves = extract_curve_path_from_image(image_path, canvas_size)
         circles = detect_circles_refined(img_gray, canvas_size)
 
-        self.path = lines + curves + circles
+        self.path = curves + circles
+        # self.path = lines + circles
         # self.path = circles
         self.draw_path_on_canvas()
         self.publish_path()

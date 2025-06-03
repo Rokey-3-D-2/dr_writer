@@ -89,6 +89,7 @@ def main(args=None):
 
     white_board_home = posx([0, 0, 0, 0, 0, 0])
     pen_holder = posx([2.970, 574.210, -136.250, 90.0, 88.17, -91.58])
+    eraser_holder = posx([145.0, 615.0, -155.0, 90.0, 90.0, -90.0])
 
     def move_to_home():
         movel(white_board_home, VEL, ACC)
@@ -304,27 +305,54 @@ def main(args=None):
     def open_grip():
         set_digital_output(2, ON)
         set_digital_output(1, OFF)
-        wait_digital_input(2)
+        # wait_digital_input(2)
+        wait(0.5)  # 그립이 열릴 때까지 잠시 대기
 
     def close_grip():
-        open_grip()
         set_digital_output(1, ON)
         set_digital_output(2, OFF)
-        wait_digital_input(1)
+        # wait_digital_input(1)
+        wait(0.5)  # 그립이 열릴 때까지 잠시 대기
     
     try:
         move_to_home()
         while True:
             rclpy.spin_once(node, timeout_sec=0.1)
+            
             if not strokes_queue.empty():
-                movel(pen_holder, VEL, ACC)
+                print("---------input mode---------")
+                print("1: pencil mode, 2: eraser mode, 3: exit")
+                mode = int(input("select mode: "))
 
-                close_grip()
+                if mode == 1:
+                    open_grip()
+                    pen_holder[1] -= 30
+                    movel(pen_holder, VEL, ACC)
+                    pen_holder[1] += 30
+                    movel(pen_holder, VEL, ACC)
 
-                pen_holder[1] -= 10
-                movel(pen_holder, VEL, ACC)
+                    close_grip()
 
-                move_to_home()
+                    pen_holder[1] -= 10
+                    movel(pen_holder, VEL, ACC)
+
+                    move_to_home()
+                elif mode == 2:
+                    open_grip()
+                    eraser_holder[1] -= 30
+                    movel(eraser_holder, VEL, ACC)
+                    eraser_holder[1] += 30
+                    movel(eraser_holder, VEL, ACC)
+
+                    close_grip()
+
+                    eraser_holder[1] -= 10
+                    movel(eraser_holder, VEL, ACC)
+
+                    move_to_home()
+                elif mode == 3:
+                    print("Exiting...")
+                    break
 
                 strokes = strokes_queue.get()
                 splited_strokes = split_strokes(strokes)
@@ -349,14 +377,25 @@ def main(args=None):
                     check_done(traj)
 
                     pen_up()
-        
-                movel(pen_holder, VEL, ACC)
 
-                pen_holder[1] += 8
-                movel(pen_holder, VEL, ACC)
-                pen_holder[1] += 2
+                if mode == 1:
+                    movel(pen_holder, VEL, ACC)
 
-                open_grip()
+                    pen_holder[1] += 8
+                    movel(pen_holder, VEL, ACC)
+                    pen_holder[1] += 2
+
+                    open_grip()
+                elif mode == 2:
+                    movel(eraser_holder, VEL, ACC)
+
+                    eraser_holder[1] += 8
+                    movel(eraser_holder, VEL, ACC)
+                    eraser_holder[1] += 2
+
+                    open_grip()
+                    
+                
 
                 move_to_home()
     except KeyboardInterrupt:

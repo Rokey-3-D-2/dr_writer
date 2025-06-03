@@ -30,6 +30,7 @@ setup(
             'test_white_board = dr_writer.test4:main',
             'test_amovesx = dr_writer.test5:main',
             'multi_stroke_board = dr_writer.multi_stroke_board:main',
+            'multi_stroke_board_with_erase = dr_writer.multi_stroke_board_with_erase:main',
             
             'edge_extractor = dr_writer.edge_extractor:main',
 
