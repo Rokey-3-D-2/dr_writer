@@ -101,19 +101,19 @@ class Mover:
 
     def move_to_above_holder(self, mode):
         self.holder_mode[mode][1] -= 30
-        self.move_to_holder(self, mode)
+        self.move_to_holder(mode)
 
     def down_to_hold(self, mode):
         self.holder_mode[mode][1] += 30
-        self.move_to_holder(self, mode)
+        self.move_to_holder(mode)
 
     def up_from_holder(self, mode):
         self.holder_mode[mode][1] -= 20
-        self.move_to_holder(self, mode)
+        self.move_to_holder(mode)
     
     def down_to_release(self, mode):
         self.holder_mode[mode][1] += 18
-        self.move_to_holder(self, mode)
+        self.move_to_holder(mode)
         self.holder_mode[mode][1] += 2
 
     def pen_down(self, callback):
@@ -276,7 +276,7 @@ class DrawerAndEraser:
             return  # strokes_queue에 토픽 없으면 종료
         
         print()
-        print("---------input mode---------")
+        print("---------------input mode---------------")
         print("1: pencil mode, 2: eraser mode, 3: exit")
         mode = int(input("select mode: "))
 
