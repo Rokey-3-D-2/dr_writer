@@ -108,11 +108,11 @@ class Mover:
         self.move_to_holder(self, mode)
 
     def up_from_holder(self, mode):
-        self.holder_mode[mode][1] -= 10
+        self.holder_mode[mode][1] -= 20
         self.move_to_holder(self, mode)
     
     def down_to_release(self, mode):
-        self.holder_mode[mode][1] += 8
+        self.holder_mode[mode][1] += 18
         self.move_to_holder(self, mode)
         self.holder_mode[mode][1] += 2
 
