@@ -47,17 +47,25 @@ class Gripper:
     def open_grip(self):
         self.set_digital_output(2, ON)
         self.set_digital_output(1, OFF)
-        self.wait_digital_input(2)
+        # self.wait_digital_input(2)
+        self.wait(0.5)
 
     def close_grip(self):
         self.open_grip()
         self.set_digital_output(1, ON)
         self.set_digital_output(2, OFF)
-        self.wait_digital_input(1)
+        # self.wait_digital_input(1)
+        self.wait(0.5)
 
 class Mover:
     white_board_home = posx([0, 0, 0, 0, 0, 0])
     pen_holder = posx([2.970, 574.210, -136.250, 90.0, 88.17, -91.58])
+    eraser_holder = posx([145.0, 615.0, -155.0, 90.0, 90.0, -90.0])
+
+    holder_mode = {
+        1: pen_holder,
+        2: eraser_holder
+    }
     
     def set_dependencies(
             self,
@@ -72,22 +80,41 @@ class Mover:
 
     def move_to_home(self):
         self.movel(self.white_board_home, VEL, ACC)
-        print(__name__)
 
     def move_to_start(self, traj):
         self.movel(traj[0], VEL, ACC)
 
-    def move_to_pen_holder(self):
-        self.movel(self.pen_holder, VEL, ACC)
+    # def move_to_pen_holder(self):
+    #     self.movel(self.pen_holder, VEL, ACC)
 
-    def down_to_pen_holder(self):
-        self.pen_holder[1] += 8
-        self.movel(self.pen_holder, VEL, ACC)
-        self.pen_holder[1] += 2
+    # def down_to_pen_holder(self):
+    #     self.pen_holder[1] += 8
+    #     self.movel(self.pen_holder, VEL, ACC)
+    #     self.pen_holder[1] += 2
 
-    def up_from_pen_holder(self):
-        self.pen_holder[1] -= 10
-        self.movel(self.pen_holder, VEL, ACC)
+    # def up_from_pen_holder(self):
+    #     self.pen_holder[1] -= 10
+    #     self.movel(self.pen_holder, VEL, ACC)
+
+    def move_to_holder(self, mode):
+        self.movel(self.holder_mode[mode], VEL, ACC)
+
+    def move_to_above_holder(self, mode):
+        self.holder_mode[mode][1] -= 30
+        self.move_to_holder(self, mode)
+
+    def down_to_hold(self, mode):
+        self.holder_mode[mode][1] += 30
+        self.move_to_holder(self, mode)
+
+    def up_from_holder(self, mode):
+        self.holder_mode[mode][1] -= 10
+        self.move_to_holder(self, mode)
+    
+    def down_to_release(self, mode):
+        self.holder_mode[mode][1] += 8
+        self.move_to_holder(self, mode)
+        self.holder_mode[mode][1] += 2
 
     def pen_down(self, callback):
         """로봇 펜을 보드(종이)로 누르는 동작을 수행합니다."""
@@ -248,14 +275,19 @@ class DrawerAndEraser:
         if self.strokes_queue.empty():
             return  # strokes_queue에 토픽 없으면 종료
         
-        self.node.get_logger().info(__name__)
+        print()
+        print("---------input mode---------")
+        print("1: pencil mode, 2: eraser mode, 3: exit")
+        mode = int(input("select mode: "))
+
         self.mover.move_to_home()
 
         self.node.get_logger().info('Start to hold the pen')
-        self.gripper.open_grip()            # 그리퍼 열고
-        self.mover.move_to_pen_holder()     # 펜 홀더 가서
-        self.gripper.close_grip()           # 펜 쥐고
-        self.mover.up_from_pen_holder()     # 살짝 위로 올라오기
+        self.gripper.open_grip()                # 그리퍼 열고
+        self.mover.move_to_above_holder(mode)   # 홀더 위로 가서
+        self.mover.down_to_hold(mode)           # 내려가서
+        self.gripper.close_grip()               # 타겟 쥐고
+        self.mover.up_from_holder(mode)         # 살짝 위로 올라오기
         self.node.get_logger().info('Now holding the pen')
 
         self.mover.move_to_home()
@@ -294,8 +326,8 @@ class DrawerAndEraser:
         self.mover.move_to_home()
 
         self.node.get_logger().info('Start to release the pen')
-        self.mover.move_to_pen_holder()     # 펜홀더 가서
-        self.mover.down_to_pen_holder()     # 살짝 내려가서
+        self.mover.move_to_holder(mode)     # 홀더로 가서
+        self.mover.down_to_release(mode)    # 살짝 내려가서
         self.gripper.open_grip()            # 그리퍼 풀기
         self.node.get_logger().info('Now releasing the pen')
 
