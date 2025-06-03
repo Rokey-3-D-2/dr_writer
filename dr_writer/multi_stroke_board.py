@@ -15,11 +15,13 @@ DRAWING_PAHT = config.DRAWING_PATH
 SAMPLE_THRESHOLD = config.SAMPLE_THRESHOLD
 SAMPLE_RATIO = config.SAMPLE_RATIO
 
-# 전역 큐
-strokes_queue = queue.Queue()
-
 DR_init.__dsr__id = ROBOT_ID
 DR_init.__dsr__model = ROBOT_MODEL
+
+ON, OFF = 1, 0
+
+# 전역 큐
+strokes_queue = queue.Queue()
 
 get_end = lambda start: time.time() - start
 
@@ -44,6 +46,10 @@ def main(args=None):
         get_tcp, get_tool,
         set_tcp, set_tool, 
         set_ref_coord,
+
+        set_digital_output,
+        get_digital_input,
+        wait,
         
         movel, amovesx,
         check_motion,
@@ -82,6 +88,7 @@ def main(args=None):
     )
 
     white_board_home = posx([0, 0, 0, 0, 0, 0])
+    pen_holder = posx([2.970, 574.210, -136.250, 90.0, 88.17, -91.58])
 
     def move_to_home():
         movel(white_board_home, VEL, ACC)
@@ -287,12 +294,38 @@ def main(args=None):
 
         node.get_logger().warn(f'[Drawing Failure] time out: {get_end(start):.2f}s')
         return False
+    
+    def wait_digital_input(sig_num):
+        while not get_digital_input(sig_num):
+            wait(0.5)
+            print("Wait for digital input")
+            pass
 
+    def open_grip():
+        set_digital_output(2, ON)
+        set_digital_output(1, OFF)
+        wait_digital_input(2)
+
+    def close_grip():
+        open_grip()
+        set_digital_output(1, ON)
+        set_digital_output(2, OFF)
+        wait_digital_input(1)
+    
     try:
         move_to_home()
         while True:
             rclpy.spin_once(node, timeout_sec=0.1)
             if not strokes_queue.empty():
+                movel(pen_holder, VEL, ACC)
+
+                close_grip()
+
+                pen_holder[1] -= 10
+                movel(pen_holder, VEL, ACC)
+
+                move_to_home()
+
                 strokes = strokes_queue.get()
                 splited_strokes = split_strokes(strokes)
                 
@@ -316,6 +349,14 @@ def main(args=None):
                     check_done(traj)
 
                     pen_up()
+        
+                movel(pen_holder, VEL, ACC)
+
+                pen_holder[1] += 8
+                movel(pen_holder, VEL, ACC)
+                pen_holder[1] += 2
+
+                open_grip()
 
                 move_to_home()
     except KeyboardInterrupt:
