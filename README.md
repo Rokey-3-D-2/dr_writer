@@ -30,4 +30,6 @@ ros2 run dr_write multi_stroke_drawing
 ### Terminal 3
 ros2 run dr_write multi_stroke_board
 
-![참고 영상](https://drive.google.com/file/d/1qMzNq5Bk4jpOpDGAaUjZX8tPxBqWFZZe/view?usp=sharing)
+### reference
+
+[참고영상](https://drive.google.com/file/d/1qMzNq5Bk4jpOpDGAaUjZX8tPxBqWFZZe/view?usp=sharing)
