@@ -59,15 +59,23 @@ ROS2를 활용한 로봇 자동화 공정 시스템 구현 프로젝트
 - 영상 링크: [Draw](https://youtu.be/NOHitKVgsI4)
 - 영상 링크: [Erase](https://youtu.be/iGi9yeOYFWk)
 
+<div align="center">
+
 [Drawing](https://github.com/user-attachments/assets/f547e5a1-995f-4640-8ace-7e6315c9316e)
 
 [Erase](https://github.com/user-attachments/assets/134f90ca-ee6f-42eb-8520-8dc8504165ad)
 
+</div>
+
 ## 다이어그램
+
+<div align="center">
 
 ![Flowcahrt](https://github.com/user-attachments/assets/9a451a1b-6d50-435c-8902-3749067926d0)
 
 ![Class Diagram](https://github.com/user-attachments/assets/51778c67-cfdf-4e92-8360-83c9d434dc33)
+
+</div>
 
 ## 프로젝트 기여자
 
@@ -76,7 +84,28 @@ ROS2를 활용한 로봇 자동화 공정 시스템 구현 프로젝트
 - 위석환: llaayy.kr@gmail.com
 - 최초인: choinchoi0331@gmail.com
 
-## 참고 자료
+## 교육과정 및 참고자료
+
+### 교육과정
+
+<div align="center">
+
+| 주차 | 기간 | 구분 | 강의실 |
+| --- | --- | --- | --- |
+| <3주차> | 2025.05.23(금) ~ 2025.05.29(목) | 협동-1 | * 별관 : B-2호 |
+| <4주차> | 2025.05.30(금) ~ 2025.06.05(목) | 협동-1 | * 별관 : B-2호 |
+
+| 차시 | 학습내용 | 실습항목 |
+| --- | --- | --- |
+| 1 | 로보틱스 이론<br>협동로봇 이해 | 이론 교육<br>Python을 이용한 로보틱스 시뮬레이션 |
+| 2~4 | 두산 협동로봇 기본 동작 학습 | Dart Platform을 이용한 두산 협동로봇 동작 |
+| 5~7 | ROS2를 이용한 두산 협동로봇 운용 | ROS2를 이용한 두산 협동로봇 동작 |
+| 8~9 | ROS2 + Moveit을 이용한 협동로봇 동작 | Moveit 이론<br>ROS2 + Moveit 사용법 실습 |
+| 10 | 팀 프로젝트 시연 및 발표 |  |
+
+</div>
+
+### 참고자료
 
 - https://manual.doosanrobotics.com/ko/programming-manual/3.3.0/publish/
 
