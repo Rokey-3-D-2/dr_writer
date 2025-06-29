@@ -107,5 +107,6 @@ ROS2를 활용한 로봇 자동화 공정 시스템 구현 프로젝트
 
 ### 참고자료
 
+- https://github.com/DoosanRobotics/doosan-robot2
 - https://manual.doosanrobotics.com/ko/programming-manual/3.3.0/publish/
 
