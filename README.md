@@ -59,9 +59,14 @@ ROS2를 활용한 로봇 자동화 공정 시스템 구현 프로젝트
 - 영상 링크: [Draw](https://youtu.be/NOHitKVgsI4)
 - 영상 링크: [Erase](https://youtu.be/iGi9yeOYFWk)
 
+[Drawing](https://github.com/user-attachments/assets/f547e5a1-995f-4640-8ace-7e6315c9316e)
+
+[Erase](https://github.com/user-attachments/assets/134f90ca-ee6f-42eb-8520-8dc8504165ad)
+
 ## 다이어그램
 
 ![Flowcahrt](https://github.com/user-attachments/assets/9a451a1b-6d50-435c-8902-3749067926d0)
+
 ![Class Diagram](https://github.com/user-attachments/assets/51778c67-cfdf-4e92-8360-83c9d434dc33)
 
 ## 프로젝트 기여자
